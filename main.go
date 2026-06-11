@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,18 @@ import (
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
+}
+
+type parameters struct {
+	Body string `json:"body"`
+}
+
+type errorResponse struct {
+	Error string `json:"error"`
+}
+
+type validResponse struct {
+	Valid bool `json:"valid"`
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -43,6 +56,43 @@ func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte("Hits reset"))
 }
 
+func respondWithJSON(w http.ResponseWriter, code int, paylaod interface{}) {
+	dat, err := json.Marshal(paylaod)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	_, _ = w.Write(dat)
+}
+
+func respondWithError(w http.ResponseWriter, code int, msg string) {
+	respondWithJSON(w, code, errorResponse{
+		Error: msg,
+	})
+}
+
+func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
+	var params parameters
+
+	err := json.NewDecoder(r.Body).Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Something went wrong")
+		return
+	}
+
+	if len(params.Body) > 140 {
+		respondWithError(w, http.StatusBadRequest, "Chirp is too long")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, validResponse{
+		Valid: true,
+	})
+}
+
 func main() {
 	const filepathRoot = "."
 	const port = "8080"
@@ -59,6 +109,7 @@ func main() {
 
 	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
+	mux.HandleFunc("POST /api/validate_chirp", handlerValidateChirp)
 
 	fileServer := http.StripPrefix(
 		"/app",
