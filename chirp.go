@@ -15,10 +15,6 @@ type createChirpParams struct {
 	UserID uuid.UUID `json:"user_id"`
 }
 
-type parameters struct {
-	Body string `json:"body"`
-}
-
 type Chirp struct {
 	ID        uuid.UUID `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
