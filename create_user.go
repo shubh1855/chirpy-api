@@ -2,14 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"httpserver/internal/auth"
+	"httpserver/internal/database"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-type createUserRequest struct {
-	Email string `json:"email"`
+type loginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 type User struct {
@@ -20,7 +23,7 @@ type User struct {
 }
 
 func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
-	var params createUserRequest
+	var params loginRequest
 	err := json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
 		respondWithError(
@@ -32,9 +35,23 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	hashedPassword, err := auth.HashPassword(params.Password)
+	if err != nil {
+		respondWithError(
+			w,
+			http.StatusInternalServerError,
+			"Couldn't hash password",
+			err,
+		)
+		return
+	}
+
 	user, err := cfg.db.CreateUser(
 		r.Context(),
-		params.Email,
+		database.CreateUserParams{
+			Email:          params.Email,
+			HashedPassword: hashedPassword,
+		},
 	)
 	if err != nil {
 		respondWithError(
