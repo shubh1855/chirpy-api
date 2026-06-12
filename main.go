@@ -1,15 +1,41 @@
 package main
 
 import (
+	"database/sql"
+	"httpserver/internal/database"
 	"log"
 	"net/http"
+	"os"
+
+	_ "github.com/lib/pq"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
 	const filepathRoot = "."
 	const port = "8080"
 
-	apiCfg := &apiConfig{}
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	dbURL := os.Getenv("DB_URL")
+
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dbQueries := database.New(db)
+
+	apiCfg := &apiConfig{db: dbQueries}
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	mux := http.NewServeMux()
 

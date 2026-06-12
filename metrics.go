@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"httpserver/internal/database"
 	"net/http"
 	"sync/atomic"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
+	db             *database.Queries
 }
 
 func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, r *http.Request) {
