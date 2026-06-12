@@ -3,9 +3,20 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"httpserver/internal/auth"
+
+	"github.com/google/uuid"
 )
+
+type LoginResponse struct {
+	ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	Email     string    `json:"email"`
+	Token     string    `json:"token"`
+}
 
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 
@@ -52,10 +63,36 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, User{
+	expiresIn := time.Hour
+
+	if params.ExpiresInSeconds > 0 {
+		expiresIn = time.Duration(params.ExpiresInSeconds) * time.Second
+
+		if expiresIn > time.Hour {
+			expiresIn = time.Hour
+		}
+	}
+
+	token, err := auth.MakeJWT(
+		user.ID,
+		cfg.jwtSecret,
+		expiresIn,
+	)
+	if err != nil {
+		respondWithError(
+			w,
+			http.StatusInternalServerError,
+			"Couldn't create token",
+			err,
+		)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, LoginResponse{
 		ID:        user.ID,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 		Email:     user.Email,
+		Token:     token,
 	})
 }

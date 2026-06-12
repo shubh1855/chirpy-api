@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"httpserver/internal/auth"
 	"httpserver/internal/database"
 	"net/http"
 	"strings"
@@ -11,8 +12,7 @@ import (
 )
 
 type createChirpParams struct {
-	Body   string    `json:"body"`
-	UserID uuid.UUID `json:"user_id"`
+	Body string `json:"body"`
 }
 
 type Chirp struct {
@@ -44,7 +44,32 @@ func cleanProfanity(text string) string {
 func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request) {
 	var params createChirpParams
 
-	err := json.NewDecoder(r.Body).Decode(&params)
+	tokenString, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(
+			w,
+			http.StatusUnauthorized,
+			"Missing or invalid token",
+			err,
+		)
+		return
+	}
+
+	userID, err := auth.ValidateJWT(
+		tokenString,
+		cfg.jwtSecret,
+	)
+	if err != nil {
+		respondWithError(
+			w,
+			http.StatusUnauthorized,
+			"Invalid token",
+			err,
+		)
+		return
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
 		respondWithError(
 			w,
@@ -74,7 +99,7 @@ func (cfg *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request)
 			CreatedAt: time.Now().UTC(),
 			UpdatedAt: time.Now().UTC(),
 			Body:      cleanedBody,
-			UserID:    params.UserID,
+			UserID:    userID,
 		},
 	)
 

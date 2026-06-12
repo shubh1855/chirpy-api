@@ -23,6 +23,7 @@ func main() {
 
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
+	jwtSecret := os.Getenv("JWT_SECRET")
 
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
@@ -32,8 +33,9 @@ func main() {
 	dbQueries := database.New(db)
 
 	apiCfg := &apiConfig{
-		db:       dbQueries,
-		platform: platform,
+		db:        dbQueries,
+		platform:  platform,
+		jwtSecret: jwtSecret,
 	}
 
 	err = db.Ping()
