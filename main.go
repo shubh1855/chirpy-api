@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync/atomic"
 )
 
@@ -20,8 +21,8 @@ type errorResponse struct {
 	Error string `json:"error"`
 }
 
-type validResponse struct {
-	Valid bool `json:"valid"`
+type cleanedResponse struct {
+	CleanedBody string `json:"cleaned_body"`
 }
 
 func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
@@ -74,6 +75,24 @@ func respondWithError(w http.ResponseWriter, code int, msg string) {
 	})
 }
 
+func cleanProfanity(text string) string {
+	badWords := map[string]bool{
+		"kerfuffle": true,
+		"sharbert":  true,
+		"fornax":    true,
+	}
+
+	words := strings.Split(text, " ")
+
+	for i, word := range words {
+		if badWords[strings.ToLower(word)] {
+			words[i] = "****"
+		}
+	}
+
+	return strings.Join(words, " ")
+}
+
 func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 	var params parameters
 
@@ -88,8 +107,10 @@ func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, validResponse{
-		Valid: true,
+	cleaned := cleanProfanity(params.Body)
+
+	respondWithJSON(w, http.StatusOK, cleanedResponse{
+		CleanedBody: cleaned,
 	})
 }
 
