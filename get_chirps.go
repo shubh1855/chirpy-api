@@ -1,9 +1,36 @@
 package main
 
-import "net/http"
+import (
+	"httpserver/internal/database"
+	"net/http"
+
+	"github.com/google/uuid"
+)
 
 func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
-	chirps, err := cfg.db.GetChirps(r.Context())
+	authorID := r.URL.Query().Get("author_id")
+
+	var chirps []database.Chirp
+	var err error
+
+	if authorID != "" {
+		userID, err := uuid.Parse(authorID)
+		if err != nil {
+			respondWithError(
+				w,
+				http.StatusBadRequest,
+				"Invalid author ID",
+				err,
+			)
+			return
+		}
+
+		chirps, err = cfg.db.GetChirpsByAuthor(r.Context(), userID)
+
+	} else {
+		chirps, err = cfg.db.GetChirps(r.Context())
+	}
+
 	if err != nil {
 		respondWithError(
 			w,
