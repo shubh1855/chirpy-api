@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"httpserver/internal/auth"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -15,9 +16,20 @@ type PolkaWebhook struct {
 }
 
 func (cfg *apiConfig) handlerPolkaWebhook(w http.ResponseWriter, r *http.Request) {
+	apiKey, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if apiKey != cfg.polkaKey {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	var params PolkaWebhook
 
-	err := json.NewDecoder(r.Body).Decode(&params)
+	err = json.NewDecoder(r.Body).Decode(&params)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
