@@ -1,7 +1,7 @@
 package main
 
 import (
-	"httpserver/internal/database"
+	"github.com/shubh1855/chirpy-api/internal/database"
 	"net/http"
 	"sort"
 

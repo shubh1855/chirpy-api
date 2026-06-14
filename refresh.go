@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"httpserver/internal/auth"
+	"github.com/shubh1855/chirpy-api/internal/auth"
 )
 
 type refreshResponse struct {

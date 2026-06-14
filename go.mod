@@ -1,4 +1,4 @@
-module httpserver
+module github.com/shubh1855/chirpy-api
 
 go 1.26.1
 

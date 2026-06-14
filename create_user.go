@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"httpserver/internal/auth"
-	"httpserver/internal/database"
+	"github.com/shubh1855/chirpy-api/internal/auth"
+	"github.com/shubh1855/chirpy-api/internal/database"
 	"net/http"
 	"time"
 

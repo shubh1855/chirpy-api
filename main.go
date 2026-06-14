@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	"httpserver/internal/database"
+	"github.com/shubh1855/chirpy-api/internal/database"
 	"log"
 	"net/http"
 	"os"

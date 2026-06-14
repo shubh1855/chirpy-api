@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	"httpserver/internal/auth"
+	"github.com/shubh1855/chirpy-api/internal/auth"
 	"net/http"
 
 	"github.com/google/uuid"

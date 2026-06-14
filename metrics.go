@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"httpserver/internal/database"
+	"github.com/shubh1855/chirpy-api/internal/database"
 	"net/http"
 	"sync/atomic"
 )
