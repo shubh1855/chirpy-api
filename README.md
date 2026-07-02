@@ -1,8 +1,30 @@
-# Chirpy API
+<p align="center">
+  A Twitter-like social media backend built with Go and PostgreSQL.
+</p>
 
-A Twitter-like social media backend written in Go.
+<p align="center">
+  <img src="https://img.shields.io/github/go-mod/go-version/shubh1855/chirpy-api" alt="Go Version">
+  <img src="https://img.shields.io/github/v/release/shubh1855/chirpy-api" alt="Release">
+  <img src="https://img.shields.io/github/actions/workflow/status/shubh1855/chirpy-api/release.yml?branch=release" alt="CI">
+  <img src="https://img.shields.io/github/license/shubh1855/chirpy-api" alt="License">
+  <img src="https://img.shields.io/github/last-commit/shubh1855/chirpy-api" alt="Last Commit">
+</p>
 
-Chirpy provides user authentication, JWT-based authorization, refresh tokens, user profile management, chirp creation and deletion, Chirpy Red memberships, and webhook integrations.
+---
+
+## Overview
+
+Chirpy API is a production-style REST backend inspired by Twitter. The project was built as part of the Boot.dev Backend Path and expanded into a complete social media API featuring authentication, authorization, refresh tokens, webhooks, and PostgreSQL persistence.
+
+The project demonstrates modern backend engineering practices in Go, including:
+
+- JWT authentication and authorization
+- Refresh token sessions
+- Argon2 password hashing
+- Type-safe database queries with SQLC
+- Database migrations with Goose
+- Webhook integrations
+- Automated releases with GitHub Actions RESTful API design
 
 ---
 
@@ -15,9 +37,9 @@ Chirpy provides user authentication, JWT-based authorization, refresh tokens, us
 - Argon2 password hashing
 - JWT access tokens
 - Refresh token authentication
-- Token revocation
-- Protected API endpoints
-- Authorization checks for resource ownership
+- Refresh token revocation
+- Protected endpoints
+- Resource ownership authorization
 
 ### Chirps
 
@@ -33,28 +55,49 @@ Chirpy provides user authentication, JWT-based authorization, refresh tokens, us
 
 - Register users
 - Update email and password
-- Chirpy Red membership support
+- Chirpy Red memberships
 
 ### Admin
 
+- Health check endpoint
 - Metrics endpoint
-- Reset endpoint (development mode)
+- Development reset endpoint
 
 ### Integrations
 
 - Polka webhook integration
-- API key validation for webhook security
+- API key authentication for webhooks
 
 ---
 
 ## Tech Stack
 
-- Go
-- PostgreSQL
-- SQLC
-- Goose
-- JWT
-- Argon2id
+| Category            | Technology     |
+| ------------------- | -------------- |
+| Language            | Go             |
+| Database            | PostgreSQL     |
+| Authentication      | JWT            |
+| Password Hashing    | Argon2id       |
+| Query Generation    | SQLC           |
+| Database Migrations | Goose          |
+| CI/CD               | GitHub Actions |
+| API Style           | REST           |
+
+---
+
+## Architecture
+
+```text
+Client
+   │
+   ▼
+REST API (Go)
+   │
+   ├── Authentication (JWT + Refresh Tokens)
+   ├── Business Logic
+   ├── Webhooks
+   └── PostgreSQL
+```
 
 ---
 
@@ -62,22 +105,26 @@ Chirpy provides user authentication, JWT-based authorization, refresh tokens, us
 
 ```text
 .
+├── assets
+│   └── logo.png
 ├── internal
 │   ├── auth
-│   │   ├── bearer.go
 │   │   ├── apikey.go
+│   │   ├── bearer.go
 │   │   ├── jwt.go
 │   │   ├── passwords.go
 │   │   └── refresh.go
-│   │
 │   └── database
-│
+│       ├── chirps.sql.go
+│       ├── refresh_tokens.sql.go
+│       ├── users.sql.go
+│       └── models.go
 ├── sql
-│   ├── schema
-│   └── queries
-│
+│   ├── queries
+│   └── schema
 ├── main.go
 ├── go.mod
+├── sqlc.yaml
 └── README.md
 ```
 
@@ -85,7 +132,7 @@ Chirpy provides user authentication, JWT-based authorization, refresh tokens, us
 
 ## Requirements
 
-- Go 1.24+
+- Go 1.26+
 - PostgreSQL
 - SQLC
 - Goose
@@ -94,71 +141,95 @@ Chirpy provides user authentication, JWT-based authorization, refresh tokens, us
 
 ## Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file:
 
 ```env
 DB_URL=postgres://postgres:postgres@localhost:5432/chirpy?sslmode=disable
 
-JWT_SECRET=your-secret-key
+JWT_SECRET=your-super-secret-jwt-key
 
 POLKA_KEY=f271c81ff7084ee5b99a5091b42d486e
 
 PLATFORM=dev
 ```
 
+> [!IMPORTANT]
+> Never commit your real `.env` file. Create a `.env.example` file and commit that instead.
+
 ---
 
 ## Installation
 
-Clone the repository:
+### Clone the Repository
 
 ```bash
-git clone https://github.com/<username>/chirpy-api.git
-
+git clone https://github.com/shubh1855/chirpy-api.git
 cd chirpy-api
 ```
 
-Install dependencies:
+### Install Dependencies
 
 ```bash
 go mod download
 ```
 
----
-
-## Database Setup
-
-Create the database:
+### Create the Database
 
 ```sql
 CREATE DATABASE chirpy;
 ```
 
-Run migrations:
+### Run Migrations
 
 ```bash
 goose postgres "$DB_URL" up
 ```
 
-Generate SQLC code:
+### Generate SQLC Code
 
 ```bash
 sqlc generate
 ```
 
----
-
-## Running the Server
+### Start the Server
 
 ```bash
 go run .
 ```
 
-The server starts on:
+The server will be available at:
 
 ```text
 http://localhost:8080
 ```
+
+---
+
+## Running Tests
+
+```bash
+go test ./...
+```
+
+---
+
+# API Summary
+
+| Method | Endpoint                | Description               |
+| ------ | ----------------------- | ------------------------- |
+| POST   | `/api/users`            | Register a user           |
+| POST   | `/api/login`            | Login                     |
+| POST   | `/api/refresh`          | Refresh access token      |
+| POST   | `/api/revoke`           | Revoke refresh token      |
+| PUT    | `/api/users`            | Update user               |
+| POST   | `/api/chirps`           | Create chirp              |
+| GET    | `/api/chirps`           | Get all chirps            |
+| GET    | `/api/chirps/{chirpID}` | Get chirp by ID           |
+| DELETE | `/api/chirps/{chirpID}` | Delete chirp              |
+| POST   | `/api/polka/webhooks`   | Process webhook           |
+| GET    | `/api/healthz`          | Health check              |
+| GET    | `/admin/metrics`        | Metrics                   |
+| POST   | `/admin/reset`          | Reset database (dev only) |
 
 ---
 
@@ -347,47 +418,20 @@ Response:
 GET /api/chirps
 ```
 
-Response:
+Optional query parameters:
 
-```json
-[
-  {
-    "id": "uuid",
-    "body": "hello world",
-    "user_id": "uuid"
-  }
-]
+```text
+author_id=<user-id>
+sort=asc
+sort=desc
 ```
 
----
-
-### Filter by Author
+Examples:
 
 ```http
-GET /api/chirps?author_id=<user-id>
-```
-
----
-
-### Sort Ascending
-
-```http
-GET /api/chirps?sort=asc
-```
-
----
-
-### Sort Descending
-
-```http
+GET /api/chirps
 GET /api/chirps?sort=desc
-```
-
----
-
-### Combined Query
-
-```http
+GET /api/chirps?author_id=<user-id>
 GET /api/chirps?author_id=<user-id>&sort=desc
 ```
 
@@ -417,13 +461,7 @@ Responses:
 
 ```http
 204 No Content
-```
-
-```http
 403 Forbidden
-```
-
-```http
 404 Not Found
 ```
 
@@ -451,7 +489,7 @@ OK
 GET /admin/metrics
 ```
 
-Returns a simple HTML page containing application metrics.
+Returns an HTML page showing application metrics.
 
 ---
 
@@ -467,7 +505,7 @@ Development mode only.
 
 ## Polka Webhooks
 
-### Upgrade User To Chirpy Red
+### Upgrade User to Chirpy Red
 
 ```http
 POST /api/polka/webhooks
@@ -498,9 +536,9 @@ Response:
 
 ---
 
-## Authentication Schemes
+# Authentication Schemes
 
-### JWT Access Tokens
+## JWT Access Tokens
 
 ```http
 Authorization: Bearer <jwt>
@@ -514,7 +552,7 @@ Used for:
 
 ---
 
-### Refresh Tokens
+## Refresh Tokens
 
 ```http
 Authorization: Bearer <refresh-token>
@@ -527,7 +565,7 @@ Used for:
 
 ---
 
-### Polka API Keys
+## Polka API Keys
 
 ```http
 Authorization: ApiKey <polka-key>
@@ -539,16 +577,29 @@ Used for:
 
 ---
 
-## Future Improvements
+## CI/CD
 
-- Chirp editing
-- Pagination
-- Rate limiting
-- OpenAPI/Swagger documentation
-- Docker support
-- CI/CD pipeline
-- Structured logging
-- Role-based authorization
+The project uses GitHub Actions for automated releases.
+
+Every merge into the `release` branch:
+
+- Runs tests
+- Builds the application
+- Generates the next semantic version
+- Creates a GitHub Release
+- Publishes release binaries
+
+---
+
+## Roadmap
+
+- [ ] Chirp editing
+- [ ] Pagination
+- [ ] Rate limiting
+- [ ] Docker support
+- [ ] OpenAPI/Swagger documentation
+- [ ] Structured logging
+- [ ] Role-based authorization
 
 ---
 
