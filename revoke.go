@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/shubh1855/chirpy-api/internal/auth"
 	"net/http"
+
+	"github.com/shubh1855/chirpy-api/internal/auth"
 )
 
 func (cfg *apiConfig) handlerRevoke(w http.ResponseWriter, r *http.Request) {
@@ -11,7 +12,7 @@ func (cfg *apiConfig) handlerRevoke(w http.ResponseWriter, r *http.Request) {
 		respondWithError(
 			w,
 			http.StatusUnauthorized,
-			"Missing refresh  token",
+			"Missing refresh token",
 			err,
 		)
 		return
@@ -25,7 +26,7 @@ func (cfg *apiConfig) handlerRevoke(w http.ResponseWriter, r *http.Request) {
 		respondWithError(
 			w,
 			http.StatusInternalServerError,
-			"Couldn't create token",
+			"Couldn't revoke refresh token",
 			err,
 		)
 		return

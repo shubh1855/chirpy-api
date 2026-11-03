@@ -22,7 +22,6 @@ type LoginResponse struct {
 }
 
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
-
 	var params loginRequest
 
 	err := json.NewDecoder(r.Body).Decode(&params)
@@ -40,7 +39,6 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		r.Context(),
 		params.Email,
 	)
-
 	if err != nil {
 		respondWithError(
 			w,
@@ -81,7 +79,15 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshToken := auth.MakeRefreshToken()
+	refreshToken, err := auth.MakeRefreshToken()
+	if err != nil {
+		respondWithError(
+			w,
+			http.StatusInternalServerError,
+			"Couldn't create refresh token",
+			err)
+		return
+	}
 
 	_, err = cfg.db.CreateRefreshToken(
 		r.Context(),
@@ -98,6 +104,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 			"Couldn't create refresh token",
 			err,
 		)
+		return
 	}
 
 	respondWithJSON(w, http.StatusOK, LoginResponse{
